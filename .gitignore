@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.mp4
+client_secret*.json
+token*.json
+credentials.md
+

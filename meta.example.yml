@@ -1,0 +1,13 @@
+# Copy this file next to your video (or anywhere), rename it, and edit.
+# `video` and `title` are required; everything else is optional.
+
+video: "./my_video.mp4"    # resolved relative to this yml's directory if not absolute
+title: "My Video Title"
+description: |
+  Multi-line description here.
+tags:
+  - tag1
+  - tag2
+category: "22"             # YouTube category ID, defaults to 22 (People & Blogs)
+privacy_status: "private"  # public | unlisted | private
+thumbnail: "./thumb.jpg"   # optional, resolved the same way as `video`

@@ -1,0 +1,12 @@
+video: "python_030_3x4_en.mp4"
+title: "Python Challenge Two Different Python Lists, Same id"
+description: |
+  The answer is B: True.
+
+  `id([1, 2, 3])` builds a temporary list, hands its id (its memory address) back to `id()`, then the expression ends. Nothing else is holding a reference to that list, so CPython's refcount hits zero immediately and the list is freed on the spot — before the next line even runs.
+
+tags:
+  - python
+  - coding challenge
+category: "27"
+privacy_status: "private"
