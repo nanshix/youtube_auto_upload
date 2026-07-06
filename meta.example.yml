@@ -11,3 +11,9 @@ tags:
 category: "22"             # YouTube category ID, defaults to 22 (People & Blogs)
 privacy_status: "private"  # public | unlisted | private
 thumbnail: "./thumb.jpg"   # optional, resolved the same way as `video`
+playlists:                  # optional. Added to each of these playlists by
+                            # name after upload; any that don't already
+                            # exist on the channel are created (matching
+                            # privacy_status).
+  - "My Playlist"
+  - "Another Playlist"

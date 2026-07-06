@@ -22,7 +22,7 @@ CLIENT_SECRET_PATH = SCRIPT_DIR / "client_secret.json"
 TOKEN_PATH = SCRIPT_DIR / "token.json"
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
-    "https://www.googleapis.com/auth/youtube.readonly",
+    "https://www.googleapis.com/auth/youtube",
 ]
 
 DEFAULT_CATEGORY = "27"
@@ -83,6 +83,7 @@ def load_metadata(meta_path: Path) -> dict:
         "tags": data.get("tags", []),
         "category": str(data.get("category", DEFAULT_CATEGORY)),
         "privacy_status": privacy_status,
+        "playlists": data.get("playlists") or [],
     }
 
 
@@ -161,6 +162,47 @@ def set_thumbnail(youtube, video_id: str, thumbnail_path: Path) -> None:
     with_retries(do_set)
 
 
+def find_playlist_id(youtube, name: str) -> str | None:
+    page_token = None
+    while True:
+        response = youtube.playlists().list(
+            part="snippet", mine=True, maxResults=50, pageToken=page_token
+        ).execute()
+        for item in response.get("items", []):
+            if item["snippet"]["title"] == name:
+                return item["id"]
+        page_token = response.get("nextPageToken")
+        if not page_token:
+            return None
+
+
+def create_playlist(youtube, name: str, privacy_status: str) -> str:
+    body = {
+        "snippet": {"title": name},
+        "status": {"privacyStatus": privacy_status},
+    }
+
+    def do_insert():
+        return youtube.playlists().insert(part="snippet,status", body=body).execute()
+
+    response = with_retries(do_insert)
+    return response["id"]
+
+
+def add_video_to_playlist(youtube, playlist_id: str, video_id: str) -> None:
+    body = {
+        "snippet": {
+            "playlistId": playlist_id,
+            "resourceId": {"kind": "youtube#video", "videoId": video_id},
+        }
+    }
+
+    def do_insert():
+        return youtube.playlistItems().insert(part="snippet", body=body).execute()
+
+    with_retries(do_insert)
+
+
 def print_authorized_channels(youtube) -> None:
     response = youtube.channels().list(part="snippet", mine=True).execute()
     items = response.get("items", [])
@@ -200,6 +242,18 @@ def main() -> int:
                 set_thumbnail(youtube, video_id, meta["thumbnail_path"])
             except (HttpError, ConnectionError, TimeoutError) as e:
                 print(f"warning: video uploaded but thumbnail failed: {e}", file=sys.stderr)
+
+        for playlist_name in meta["playlists"]:
+            try:
+                playlist_id = find_playlist_id(youtube, playlist_name)
+                if not playlist_id:
+                    playlist_id = create_playlist(youtube, playlist_name, meta["privacy_status"])
+                add_video_to_playlist(youtube, playlist_id, video_id)
+            except (HttpError, ConnectionError, TimeoutError) as e:
+                print(
+                    f"warning: video uploaded but adding to playlist {playlist_name!r} failed: {e}",
+                    file=sys.stderr,
+                )
 
         print(f"Uploaded: https://www.youtube.com/watch?v={video_id}")
         return 0

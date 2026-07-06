@@ -47,6 +47,9 @@ tags:
 category: "22"
 privacy_status: "private"
 thumbnail: "./thumb.jpg"   # optional
+playlists:                  # optional, each created if it doesn't already exist
+  - "My Playlist"
+  - "Another Playlist"
 ```
 
 2. Run:
@@ -57,6 +60,24 @@ python upload.py --meta path/to/meta.yml
 
 On success it prints the video's watch URL. On failure it prints an error
 to stderr and exits non-zero.
+
+You can also check which channel your credentials are authorized for
+without uploading anything:
+
+```
+python upload.py --whoami
+```
+
+### Playlists
+
+If `playlists` is set in `meta.yml`, after the video uploads the script
+looks, for each name in the list, for an existing playlist on the channel
+with that exact title; if none is found, it creates one (with the same
+privacy status as the video) and adds the video to it. Playlist read/write
+requires the broader `youtube` scope (already included in `SCOPES` in
+`upload.py`) — if you're upgrading from an older version of this script
+that only requested `youtube.upload`, delete `token.json` and re-run once
+to re-authorize with the new scope.
 
 ## Files
 
